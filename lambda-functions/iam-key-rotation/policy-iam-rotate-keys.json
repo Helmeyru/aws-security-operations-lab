@@ -1,0 +1,29 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListKeys",
+      "Effect": "Allow",
+      "Action": [
+        "iam:ListAccessKeys"
+      ],
+      "Resource": "arn:aws:iam::*:user/*"
+    },
+    {
+      "Sid": "CreateKey",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateAccessKey"
+      ],
+      "Resource": "arn:aws:iam::*:user/*"
+    },
+    {
+      "Sid": "UpdateKey",
+      "Effect": "Allow",
+      "Action": [
+        "iam:UpdateAccessKey"
+      ],
+      "Resource": "arn:aws:iam::*:user/*"
+    }
+  ]
+}

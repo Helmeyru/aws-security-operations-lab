@@ -1,0 +1,17 @@
+{
+  "version": "0",
+  "id": "11111111-2222-3333-4444-555555555555",
+  "detail-type": "GuardDuty Finding",
+  "source": "aws.guardduty",
+  "account": "123456789012",
+  "time": "2026-02-25T00:00:00Z",
+  "region": "us-east-1",
+  "resources": [],
+  "detail": {
+    "resource": {
+      "accessKeyDetails": {
+        "userName": "test-rotation-user"
+      }
+    }
+  }
+}

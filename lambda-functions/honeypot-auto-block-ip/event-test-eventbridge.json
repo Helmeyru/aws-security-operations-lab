@@ -1,0 +1,26 @@
+{
+  "version": "0",
+  "id": "aabbccdd-1122-3344-5566-778899001122",
+  "detail-type": "AWS API Call via CloudTrail",
+  "source": "aws.s3",
+  "account": "340805528222",
+  "time": "2026-02-24T22:03:36Z",
+  "region": "us-east-1",
+  "resources": [],
+  "detail": {
+    "eventVersion": "1.11",
+    "eventSource": "s3.amazonaws.com",
+    "eventName": "GetObject",
+    "eventTime": "2026-02-24T22:03:36Z",
+    "sourceIPAddress": "86.62.30.104",
+    "userIdentity": {
+      "type": "IAMUser",
+      "arn": "arn:aws:iam::340805528222:user/test-exfil-user",
+      "userName": "test-exfil-user"
+    },
+    "requestParameters": {
+      "bucketName": "sec-lab-honeypot-1771026055",
+      "key": "leaked-credentials.txt"
+    }
+  }
+}
