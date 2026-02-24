@@ -1,0 +1,58 @@
+{
+  "eventVersion": "1.11",
+  "userIdentity": {
+    "type": "IAMUser",
+    "principalId": "AIDAU6WMXVKPE5ED5IZ2G",
+    "arn": "arn:aws:iam::340805528222:user/test-overprivileged-user",
+    "accountId": "340805528222",
+    "accessKeyId": "AKIAU6WMXVKPJ72RS6FT",
+    "userName": "test-overprivileged-user"
+  },
+  "eventTime": "2026-02-23T22:03:37Z",
+  "eventSource": "s3.amazonaws.com",
+  "eventName": "ListObjects",
+  "awsRegion": "us-east-1",
+  "sourceIPAddress": "86.62.30.104",
+  "userAgent": "[aws-cli/1.44.15 md/Botocore#1.42.25 ua/2.1 os/windows#11 md/arch#amd64 lang/python#3.12.6 md/pyimpl#CPython m/C,D,Z,b,n cfg/retry-mode#legacy botocore/1.42.25]",
+  "requestParameters": {
+    "list-type": "2",
+    "bucketName": "aws-cloudtrail-logs-340805528222-2941a492",
+    "continuation-token": "1CuvqhRiMYZG6Zlv+mSV837S0UmAql8MvqZAIRE3j8Ey8Ru4hn4z/TN4l6P6+TK9BH7wdq3Wbzh4LZpkz5i/OVerV5x+XbpJLxeh/hsLbPeKx9ygYS8fyw6SYqAOvY46SB7dHoiKKcbhktbIKr37Fkqbl5kFCQN9ecJLlTDlP+Xwb1+x4Z48J3PwC94C78ZAgQ9NoMxRhIGWGUSUmCOpNy89LY2y9VXoKMTMAcKNSYNnnwZxOY+F6kA==",
+    "encoding-type": "url",
+    "prefix": "AWSLogs/340805528222/CloudTrail/us-east-1/2026/02/23/",
+    "delimiter": "/",
+    "Host": "aws-cloudtrail-logs-340805528222-2941a492.s3.amazonaws.com"
+  },
+  "responseElements": null,
+  "additionalEventData": {
+    "SignatureVersion": "SigV4",
+    "CipherSuite": "TLS_AES_128_GCM_SHA256",
+    "bytesTransferredIn": 0,
+    "AuthenticationMethod": "AuthHeader",
+    "x-amz-id-2": "63nVvZt4povIz3R/W0GB4d2088xn/FP8RkBYMiirryS234k6bFiFid6yHHsVc2brXCB243DmrniiLn+WMt/e9Q==",
+    "bytesTransferredOut": 123978
+  },
+  "requestID": "88RB36321X5AG7VP",
+  "eventID": "32f6ae59-db46-48b1-b95a-6136795a9a6f",
+  "readOnly": true,
+  "resources": [
+    {
+      "accountId": "340805528222",
+      "type": "AWS::S3::Bucket",
+      "ARN": "arn:aws:s3:::aws-cloudtrail-logs-340805528222-2941a492"
+    },
+    {
+      "type": "AWS::S3::Object",
+      "ARNPrefix": "arn:aws:s3:::aws-cloudtrail-logs-340805528222-2941a492/AWSLogs/340805528222/CloudTrail/us-east-1/2026/02/23/"
+    }
+  ],
+  "eventType": "AwsApiCall",
+  "managementEvent": false,
+  "recipientAccountId": "340805528222",
+  "eventCategory": "Data",
+  "tlsDetails": {
+    "tlsVersion": "TLSv1.3",
+    "cipherSuite": "TLS_AES_128_GCM_SHA256",
+    "clientProvidedHostHeader": "aws-cloudtrail-logs-340805528222-2941a492.s3.amazonaws.com"
+  }
+}

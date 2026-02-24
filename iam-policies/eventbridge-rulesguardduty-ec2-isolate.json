@@ -1,0 +1,17 @@
+{
+  "RuleName": "GuardDuty-Isolate-Instance",
+  "Description": "Auto-isolate EC2 on high-severity GuardDuty findings",
+  "EventPattern": {
+    "source": ["aws.guardduty"],
+    "detail-type": ["GuardDuty Finding"],
+    "detail": {
+      "severity": [4,5,6,7,8,8.5,9,10],
+      "type": [
+        "UnauthorizedAccess:EC2/SSHBruteForce",
+        "Recon:EC2/Portscan",
+        "CryptoCurrency:EC2/BitcoinTool.B"
+      ]
+    }
+  },
+  "Target": "Lambda: sec-lab-isolate-ec2"
+}

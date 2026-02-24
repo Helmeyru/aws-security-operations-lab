@@ -1,0 +1,17 @@
+{
+  "RuleName": "honeypot-s3-getobject-trigger",
+  "Description": "Triggers Lambda when honeypot S3 bucket files are accessed",
+  "EventPattern": {
+    "source": ["aws.s3"],
+    "detail-type": ["AWS API Call via CloudTrail"],
+    "detail": {
+      "eventSource": ["s3.amazonaws.com"],
+      "eventName": ["GetObject"],
+      "requestParameters": {
+        "bucketName": ["sec-lab-honeypot-1771026055"]
+      }
+    }
+  },
+  "Target": "Lambda: honeypot-auto-block-ip",
+  "Notes": "Requires CloudTrail S3 data events enabled on the honeypot bucket"
+}

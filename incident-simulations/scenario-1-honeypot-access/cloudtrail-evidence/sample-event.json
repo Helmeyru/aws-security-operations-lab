@@ -1,0 +1,54 @@
+{
+  "eventVersion": "1.11",
+  "userIdentity": {
+    "type": "IAMUser",
+    "principalId": "AIDAU6WMXVKPMOWWWREKD",
+    "arn": "arn:aws:iam::340805528222:user/test-exfil-user",
+    "accountId": "340805528222",
+    "accessKeyId": "AKIAU6WMXVKPN2X2P3NP",
+    "userName": "test-exfil-user"
+  },
+  "eventTime": "2026-02-23T00:24:28Z",
+  "eventSource": "s3.amazonaws.com",
+  "eventName": "GetObject",
+  "awsRegion": "us-east-1",
+  "sourceIPAddress": "193.160.245.168",
+  "userAgent": "[aws-cli/1.44.15 md/Botocore#1.42.25 ua/2.1 os/windows#11 md/arch#amd64 lang/python#3.12.6 md/pyimpl#CPython m/b,Z,D cfg/retry-mode#legacy botocore/1.42.25]",
+  "requestParameters": {
+    "bucketName": "sec-lab-honeypot-1771026055",
+    "Host": "sec-lab-honeypot-1771026055.s3.amazonaws.com",
+    "key": "customer-data.sql"
+  },
+  "responseElements": null,
+  "additionalEventData": {
+    "SignatureVersion": "SigV4",
+    "CipherSuite": "TLS_AES_128_GCM_SHA256",
+    "bytesTransferredIn": 0,
+    "AuthenticationMethod": "AuthHeader",
+    "x-amz-id-2": "rp4gvtMfEjAzWshTeNGyc+xNyKKfcVhlVUye4mzWnfHjQrqoIxdC0QJHtLQcRJl1x/xYRvEC7ww=",
+    "bytesTransferredOut": 138
+  },
+  "requestID": "VBKJN9XQD78DWSEZ",
+  "eventID": "c3f6ebe6-d2f7-4808-abb7-3cb775accb9d",
+  "readOnly": true,
+  "resources": [
+    {
+      "accountId": "340805528222",
+      "type": "AWS::S3::Bucket",
+      "ARN": "arn:aws:s3:::sec-lab-honeypot-1771026055"
+    },
+    {
+      "type": "AWS::S3::Object",
+      "ARN": "arn:aws:s3:::sec-lab-honeypot-1771026055/customer-data.sql"
+    }
+  ],
+  "eventType": "AwsApiCall",
+  "managementEvent": false,
+  "recipientAccountId": "340805528222",
+  "eventCategory": "Data",
+  "tlsDetails": {
+    "tlsVersion": "TLSv1.3",
+    "cipherSuite": "TLS_AES_128_GCM_SHA256",
+    "clientProvidedHostHeader": "sec-lab-honeypot-1771026055.s3.amazonaws.com"
+  }
+}

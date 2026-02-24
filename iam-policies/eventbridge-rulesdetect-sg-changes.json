@@ -1,0 +1,16 @@
+{
+  "RuleName": "Detect-SG-Changes",
+  "Description": "Alert when security group rules are modified",
+  "EventPattern": {
+    "source": ["aws.ec2"],
+    "detail-type": ["AWS API Call via CloudTrail"],
+    "detail": {
+      "eventName": [
+        "AuthorizeSecurityGroupIngress",
+        "RevokeSecurityGroupIngress",
+        "ModifySecurityGroupRules"
+      ]
+    }
+  },
+  "Target": "SNS: sec-lab-security-alerts"
+}

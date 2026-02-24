@@ -1,0 +1,23 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowS3PolicyManagementOnHoneypot",
+      "Effect": "Allow",
+      "Action": ["s3:GetBucketPolicy", "s3:PutBucketPolicy"],
+      "Resource": "arn:aws:s3:::sec-lab-honeypot-1771026055"
+    },
+    {
+      "Sid": "AllowSNSPublish",
+      "Effect": "Allow",
+      "Action": "sns:Publish",
+      "Resource": "arn:aws:sns:us-east-1:340805528222:sec-lab-honeypot-alerts"
+    },
+    {
+      "Sid": "AllowCloudWatchLogs",
+      "Effect": "Allow",
+      "Action": ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"],
+      "Resource": "arn:aws:logs:*:*:*"
+    }
+  ]
+}

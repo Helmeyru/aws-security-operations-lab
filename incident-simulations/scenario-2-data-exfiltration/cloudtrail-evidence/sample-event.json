@@ -1,0 +1,54 @@
+{
+  "eventVersion": "1.11",
+  "userIdentity": {
+    "type": "IAMUser",
+    "principalId": "AIDAU6WMXVKPMOWWWREKD",
+    "arn": "arn:aws:iam::340805528222:user/test-exfil-user",
+    "accountId": "340805528222",
+    "accessKeyId": "AKIAU6WMXVKPGQRLXCVQ",
+    "userName": "test-exfil-user"
+  },
+  "eventTime": "2026-02-23T20:54:58Z",
+  "eventSource": "s3.amazonaws.com",
+  "eventName": "GetObject",
+  "awsRegion": "us-east-1",
+  "sourceIPAddress": "3.86.208.137",
+  "userAgent": "[aws-cli/2.33.23 md/awscrt#0.31.1 ua/2.1 os/linux#6.1.159-182.297.amzn2023.x86_64 md/arch#x86_64 lang/python#3.13.11 md/pyimpl#CPython exec-env/CloudShell m/b,Z,E,G cfg/retry-mode#standard md/installer#exe md/distrib#amzn.2023 md/prompt#off md/command#s3.sync]",
+  "requestParameters": {
+    "bucketName": "sec-lab-confidential-data",
+    "Host": "sec-lab-confidential-data.s3.us-east-1.amazonaws.com",
+    "key": "finance/quarterly-results-q3.txt"
+  },
+  "responseElements": null,
+  "additionalEventData": {
+    "SignatureVersion": "SigV4",
+    "CipherSuite": "TLS_AES_128_GCM_SHA256",
+    "bytesTransferredIn": 0,
+    "AuthenticationMethod": "AuthHeader",
+    "x-amz-id-2": "JgPPsqKWf9L72tK1K1xPO6mcOcDmYAaeipRO/ca2LHaTMPD9Yn6I+z0rKELewhxb5ormgLTG/dM=",
+    "bytesTransferredOut": 54
+  },
+  "requestID": "2K20Z0YVDVFQQ05D",
+  "eventID": "41d1481d-c2e1-4033-adf5-dd5b1b5cc49e",
+  "readOnly": true,
+  "resources": [
+    {
+      "accountId": "340805528222",
+      "type": "AWS::S3::Bucket",
+      "ARN": "arn:aws:s3:::sec-lab-confidential-data"
+    },
+    {
+      "type": "AWS::S3::Object",
+      "ARN": "arn:aws:s3:::sec-lab-confidential-data/finance/quarterly-results-q3.txt"
+    }
+  ],
+  "eventType": "AwsApiCall",
+  "managementEvent": false,
+  "recipientAccountId": "340805528222",
+  "eventCategory": "Data",
+  "tlsDetails": {
+    "tlsVersion": "TLSv1.3",
+    "cipherSuite": "TLS_AES_128_GCM_SHA256",
+    "clientProvidedHostHeader": "sec-lab-confidential-data.s3.us-east-1.amazonaws.com"
+  }
+}

@@ -1,2 +1,176 @@
 # AWS Security Operations Lab
-Complete security monitoring and incident response platform in AWS
+
+> **A production-grade cloud security monitoring and automated incident response platform built entirely in AWS.**
+
+---
+
+## Project Overview
+
+| Field | Details |
+|---|---|
+| **Author** | Helmey Abdulsalam ([@Helmeyru](https://github.com/Helmeyru)) |
+| **Duration** | ~25 hours |
+| **Region** | us-east-1 (N. Virginia) |
+| **Skills** | Cloud Security · Incident Response · IAM · Lambda · EventBridge · CloudTrail |
+| **Status** | ✅ Complete — all scenarios executed and documented with real evidence |
+
+This lab simulates a realistic AWS environment under attack and demonstrates the full
+detection-to-response pipeline: **CloudTrail → EventBridge → Lambda → S3 Bucket Policy / EC2 Isolation → SNS Alert**.
+
+---
+
+## Architecture
+
+```
+┌─────────────────── AWS Account: 340805528222 ───────────────────────┐
+│                                                                       │
+│   ┌── VPC (10.0.0.0/16) ──────────────────────────────────────┐     │
+│   │  Public Subnet       Private Subnet      DB Subnet         │     │
+│   │  Web Server (EC2)    App Server (EC2)     RDS MySQL         │     │
+│   │  IGW route           Local only           Private only      │     │
+│   └────────────────────────────────────────────────────────────┘     │
+│                                                                       │
+│   ┌── S3 Buckets ──────────────────────────────────────────────┐     │
+│   │  sec-lab-honeypot-1771026055   ← Honeypot trap files        │     │
+│   │  sec-lab-confidential-data-*   ← Sensitive data simulation  │     │
+│   │  sec-lab-cloudtrail-logs-*     ← Audit log storage          │     │
+│   └────────────────────────────────────────────────────────────┘     │
+│                                                                       │
+│   ┌── Detection Pipeline ──────────────────────────────────────┐     │
+│   │  CloudTrail (S3 Data Events + Management Events)            │     │
+│   │       ↓                                                     │     │
+│   │  EventBridge (direct CloudTrail event matching)             │     │
+│   │       ↓                                                     │     │
+│   │  Lambda Incident Responder                                  │     │
+│   │       ↓                    ↓                                │     │
+│   │  S3 Bucket Policy Deny    SNS Alert → Email                 │     │
+│   └────────────────────────────────────────────────────────────┘     │
+│                                                                       │
+│   ┌── Additional Controls ─────────────────────────────────────┐     │
+│   │  VPC Flow Logs → CloudWatch Logs                            │     │
+│   │  AWS Config (s3-bucket-public-read-prohibited, etc.)        │     │
+│   │  CloudWatch Metric Filters + Alarms (root usage, unauth API)│     │
+│   │  IAM Access Analyzer (privilege escalation detection)       │     │
+│   └────────────────────────────────────────────────────────────┘     │
+└───────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Attack Scenarios & Results
+
+### Scenario 1 — Honeypot S3 Access (Automated Block)
+- **Attacker:** `test-exfil-user` (IAM user with stolen access key)
+- **Attacker IP:** `193.160.245.168` (Windows 11, aws-cli/1.44.15)
+- **Files accessed:** `leaked-credentials.txt`, `customer-data.sql`
+- **Detection-to-block time: 9 seconds**
+- **Automated response:** Lambda wrote `aws:SourceIp` Deny rule to S3 bucket policy
+- [View Full Incident Report](incident-simulations/scenario-1-honeypot-access/incident-report.md)
+
+### Scenario 2 — Data Exfiltration Detection
+- **Method:** Bulk S3 downloads from `sec-lab-confidential-data` bucket
+- **Detection:** CloudWatch Logs Insights anomaly query (multiple GetObject in short window)
+- **Evidence:** CloudTrail records showing 3 files in 7 seconds from non-corporate IP
+- [View Full Incident Report](incident-simulations/scenario-2-data-exfiltration/incident-report.md)
+
+### Scenario 3 — Privilege Escalation Detection
+- **Issue:** IAM user `test-overprivileged-user` with `Action: "*", Resource: "*"` policy
+- **Detection:** IAM Access Analyzer found the overly permissive inline policy
+- **Remediation:** Replaced with scoped least-privilege policy
+- [View Full Incident Report](incident-simulations/scenario-3-privilege-escalation/incident-report.md)
+
+---
+
+## Detection Capabilities
+
+| Threat | Detection Method | Response |
+|---|---|---|
+| Honeypot file access | EventBridge → Lambda | IP blocked via S3 Bucket Policy |
+| Data exfiltration | CloudWatch Logs Insights | Manual investigation + access revocation |
+| Root account activity | CloudWatch Metric Filter + Alarm | SNS alert |
+| Unauthorized API calls | CloudWatch Metric Filter | SNS alert |
+| Security group changes | EventBridge Rule | SNS alert |
+| Compromised EC2 | GuardDuty + EventBridge | Lambda EC2 isolation |
+| Over-privileged IAM | IAM Access Analyzer | Policy remediation |
+
+---
+
+## Repository Structure
+
+```
+aws-security-operations-lab/
+├── README.md                          ← This file
+├── .gitignore
+├── SECURITY.md
+│
+├── lambda-functions/
+│   ├── honeypot-incident-responder/   ← WORKING: blocks attacker IP via S3 policy
+│   ├── ec2-isolate/                   ← Moves compromised EC2 to quarantine SG
+│   └── iam-key-rotation/              ← Deactivates and rotates compromised IAM keys
+│
+├── iam-policies/                      ← Least-privilege IAM policies (JSON)
+├── eventbridge-rules/                 ← Event pattern JSONs for all detection rules
+├── cloudwatch-metrics/                ← Metric filters, alarm configs, Insights queries
+│
+├── incident-simulations/
+│   ├── scenario-1-honeypot-access/    ← Real attack + real CloudTrail evidence
+│   ├── scenario-2-data-exfiltration/
+│   └── scenario-3-privilege-escalation/
+│
+├── infrastructure/
+│   └── diagrams/                      ← Architecture diagrams
+│
+└── playbooks/                         ← SOC response procedures
+```
+
+---
+
+## Key Technical Decisions
+
+**Why EventBridge instead of CloudWatch Metric Filter → Alarm?**
+EventBridge consumes CloudTrail events directly with sub-10-second latency.
+The Metric Filter → Alarm chain adds delay and complexity with no benefit for this use case.
+
+**Why S3 Bucket Policy instead of EC2 Security Group?**
+EC2 Security Groups protect network interfaces on EC2 instances only.
+S3 is a managed service accessed via AWS APIs — the only way to block an IP from S3
+is via the bucket policy `aws:SourceIp` condition key.
+
+**Why inline IAM policy for Lambda?**
+The Lambda role permissions are purpose-built for one specific bucket and one SNS topic.
+Inline policies are automatically deleted with the role and cannot be accidentally reused.
+
+---
+
+## Verified Performance
+
+| Metric | Result |
+|---|---|
+| Detection-to-block latency | **9 seconds** (CloudTrail → EventBridge → Lambda → S3 Policy) |
+| False positive risk | Low — EventBridge rule scoped to specific bucket and event |
+| IAM permissions scope | 3 actions only: `s3:GetBucketPolicy`, `s3:PutBucketPolicy`, `sns:Publish` |
+| Idempotency | ✅ Duplicate blocks prevented via SID-based policy check |
+
+---
+
+## Skills Demonstrated
+
+`AWS Lambda` `Amazon EventBridge` `AWS CloudTrail` `Amazon S3` `IAM Least Privilege`
+`CloudWatch Logs Insights` `AWS Config` `VPC Design` `EC2 Security Groups`
+`Incident Response` `Forensic Log Analysis` `Python (boto3)` `SOC Automation`
+`Threat Detection` `IAM Access Analyzer` `SNS Alerting`
+
+---
+
+## Future Enhancements
+
+- [ ] Terraform/CloudFormation IaC for full lab deployment
+- [ ] Slack webhook integration for real-time SOC alerts
+- [ ] AWS WAF IP set integration for CloudFront-fronted resources
+- [ ] GuardDuty threat intelligence feed integration
+- [ ] MITRE ATT&CK mapping for each scenario
+- [ ] Security dashboard in CloudWatch
+
+---
+
+*Built as a hands-on cybersecurity portfolio project. All credentials and data shown are fake and used for simulation purposes only.*

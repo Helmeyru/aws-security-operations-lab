@@ -1,0 +1,21 @@
+CloudTrail Event Analysis
+==================================================
+Event Time     : 2026-02-23T22:03:37Z
+Event Name     : ListObjects
+Event Source   : s3.amazonaws.com
+User           : test-overprivileged-user
+User ARN       : arn:aws:iam::340805528222:user/test-overprivileged-user
+Account ID     : 340805528222
+Source IP      : 86.62.30.104
+AWS Region     : us-east-1
+Read Only      : True
+Event Category : Data
+
+Resources Accessed:
+  Type : AWS::S3::Bucket
+  ARN  : arn:aws:s3:::aws-cloudtrail-logs-340805528222-2941a492
+  Type : AWS::S3::Object
+  ARN  : arn:aws:s3:::aws-cloudtrail-logs-340805528222-2941a492/AWSLogs/340805528222/CloudTrail/us-east-1/2026/02/23/
+
+Threat Detection Results:
+  WARNING: Large data transfer detected — 123978 bytes out.
