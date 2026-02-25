@@ -23,36 +23,36 @@ detection-to-response pipeline: **CloudTrail → EventBridge → Lambda → S3 B
 
 ```
 ┌─────────────────── AWS Account: 340805528222 ───────────────────────┐
-│                                                                       │
+│                                                                     │
 │   ┌── VPC (10.0.0.0/16) ──────────────────────────────────────┐     │
-│   │  Public Subnet       Private Subnet      DB Subnet         │     │
-│   │  Web Server (EC2)    App Server (EC2)     RDS MySQL         │     │
-│   │  IGW route           Local only           Private only      │     │
-│   └────────────────────────────────────────────────────────────┘     │
-│                                                                       │
-│   ┌── S3 Buckets ──────────────────────────────────────────────┐     │
-│   │  sec-lab-honeypot-1771026055   ← Honeypot trap files        │     │
-│   │  sec-lab-confidential-data-*   ← Sensitive data simulation  │     │
-│   │  sec-lab-cloudtrail-logs-*     ← Audit log storage          │     │
-│   └────────────────────────────────────────────────────────────┘     │
-│                                                                       │
-│   ┌── Detection Pipeline ──────────────────────────────────────┐     │
-│   │  CloudTrail (S3 Data Events + Management Events)            │     │
-│   │       ↓                                                     │     │
-│   │  EventBridge (direct CloudTrail event matching)             │     │
-│   │       ↓                                                     │     │
-│   │  Lambda Incident Responder                                  │     │
-│   │       ↓                    ↓                                │     │
-│   │  S3 Bucket Policy Deny    SNS Alert → Email                 │     │
-│   └────────────────────────────────────────────────────────────┘     │
-│                                                                       │
-│   ┌── Additional Controls ─────────────────────────────────────┐     │
-│   │  VPC Flow Logs → CloudWatch Logs                            │     │
-│   │  AWS Config (s3-bucket-public-read-prohibited, etc.)        │     │
-│   │  CloudWatch Metric Filters + Alarms (root usage, unauth API)│     │
-│   │  IAM Access Analyzer (privilege escalation detection)       │     │
-│   └────────────────────────────────────────────────────────────┘     │
-└───────────────────────────────────────────────────────────────────────┘
+│   │  Public Subnet       Private Subnet      DB Subnet        │     │
+│   │  Web Server (EC2)    App Server (EC2)     RDS MySQL       │     │
+│   │  IGW route           Local only           Private only    │     │
+│   └───────────────────────────────────────────────────────────┘     │
+│                                                                     │
+│   ┌── S3 Buckets ──────────────────────────────────────────────┐    │
+│   │  sec-lab-honeypot-1771026055   ← Honeypot trap files       │    │
+│   │  sec-lab-confidential-data-*   ← Sensitive data simulation │    │
+│   │  sec-lab-cloudtrail-logs-*     ← Audit log storage         │    │
+│   └────────────────────────────────────────────────────────────┘    │
+│                                                                     │
+│   ┌── Detection Pipeline ──────────────────────────────────────┐    │
+│   │  CloudTrail (S3 Data Events + Management Events)           │    │
+│   │       ↓                                                    │    │
+│   │  EventBridge (direct CloudTrail event matching)            │    │
+│   │       ↓                                                    │    │
+│   │  Lambda Incident Responder                                 │    │
+│   │       ↓                    ↓                               │    │
+│   │  S3 Bucket Policy Deny    SNS Alert → Email                │    │
+│   └────────────────────────────────────────────────────────────┘    │
+│                                                                     │
+│   ┌── Additional Controls ─────────────────────────────────────┐    │
+│   │  VPC Flow Logs → CloudWatch Logs                           │    │
+│   │  AWS Config (s3-bucket-public-read-prohibited, etc.)       │    │
+│   │  CloudWatch Metric Filters + Alarms (root usage,unauth API)│    │
+│   │  IAM Access Analyzer (privilege escalation detection)      │    │
+│   └────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -149,7 +149,7 @@ Inline policies are automatically deleted with the role and cannot be accidental
 | Detection-to-block latency | **9 seconds** (CloudTrail → EventBridge → Lambda → S3 Policy) |
 | False positive risk | Low — EventBridge rule scoped to specific bucket and event |
 | IAM permissions scope | 3 actions only: `s3:GetBucketPolicy`, `s3:PutBucketPolicy`, `sns:Publish` |
-| Idempotency | ✅ Duplicate blocks prevented via SID-based policy check |
+| Idempotency |  Duplicate blocks prevented via SID-based policy check |
 
 ---
 
