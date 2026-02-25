@@ -1,31 +1,28 @@
 # Security Policy
 
-## Responsible Disclosure
+## Scope
 
-This repository contains educational security content.
-All credentials, access keys, IP addresses, and sensitive data shown are **fake and used for simulation only**.
+This repository contains a cybersecurity lab simulation project.
+It does **not** operate any production systems or hold real user data.
 
-If you discover any real credentials accidentally committed, please:
-1. Do NOT use or share them
-2. Open a private issue or email the repository owner immediately
+## Credential Safety
 
-## What Is Safe to Commit
+- All AWS Account IDs, IP addresses, and access key IDs shown in documentation
+  are either AWS documentation examples or have been **decommissioned after the lab**.
+- No real credentials, secrets, or PII are intentionally stored in this repository.
+- If you discover a real credential accidentally committed, please report it immediately.
 
-- IAM policy JSON files (no secrets, just permission structures)
-- EventBridge event pattern JSON files
-- Lambda function Python code (no hardcoded keys)
-- Incident reports with sanitized/fake data
-- Architecture diagrams
+## Reporting a Vulnerability
 
-## What Must Never Be Committed
+If you find a real secret or sensitive value accidentally committed to this repository:
 
-- Real AWS Access Key IDs (`AKIA...`)
-- Real AWS Secret Access Keys
-- `.pem` key pair files
-- `.env` files
-- Real customer data or PII
+1. **Do not open a public GitHub issue.**
+2. Contact the author directly via GitHub: [@Helmeyru](https://github.com/Helmeyru)
+3. Include the file path and line number (not the credential value itself).
 
-## Note on Example Credentials
+The author will rotate the affected credential immediately and remove it from git history.
 
-Any credentials shown in this repo (e.g., `AKIAIOSFODNN7EXAMPLE`) are AWS documentation
-example keys and are non-functional by design.
+## Disclaimer
+
+This project is for **educational purposes only**.
+All attack simulations were performed in an isolated AWS account owned by the author.

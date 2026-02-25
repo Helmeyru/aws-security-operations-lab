@@ -1,0 +1,35 @@
+# Environment
+.env
+.env.*
+*.pem
+*.key
+credentials
+config
+
+# AWS credentials
+.aws/
+aws_credentials.txt
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Zip artifacts
+*.zip
+
+# Screenshots with sensitive data
+screenshots/private/

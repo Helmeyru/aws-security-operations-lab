@@ -2,6 +2,11 @@
 
 > **A production-grade cloud security monitoring and automated incident response platform built entirely in AWS.**
 
+[![AWS](https://img.shields.io/badge/AWS-Cloud%20Security-FF9900?logo=amazonaws&logoColor=white)](https://aws.amazon.com)
+[![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://python.org)
+[![License](https://img.shields.io/badge/License-Educational-green)](#)
+[![Status](https://img.shields.io/badge/Status-Complete-brightgreen)](#)
+
 ---
 
 ## Project Overview
@@ -22,7 +27,7 @@ detection-to-response pipeline: **CloudTrail → EventBridge → Lambda → S3 B
 ## Architecture
 
 ```
-┌─────────────────── AWS Account: 340805528222 ───────────────────────┐
+┌─────────────────── AWS Account ─────────────────────────────────────┐
 │                                                                     │
 │   ┌── VPC (10.0.0.0/16) ──────────────────────────────────────┐     │
 │   │  Public Subnet       Private Subnet      DB Subnet        │     │
@@ -31,7 +36,7 @@ detection-to-response pipeline: **CloudTrail → EventBridge → Lambda → S3 B
 │   └───────────────────────────────────────────────────────────┘     │
 │                                                                     │
 │   ┌── S3 Buckets ──────────────────────────────────────────────┐    │
-│   │  sec-lab-honeypot-1771026055   ← Honeypot trap files       │    │
+│   │  sec-lab-honeypot-*            ← Honeypot trap files       │    │
 │   │  sec-lab-confidential-data-*   ← Sensitive data simulation │    │
 │   │  sec-lab-cloudtrail-logs-*     ← Audit log storage         │    │
 │   └────────────────────────────────────────────────────────────┘    │
@@ -55,13 +60,14 @@ detection-to-response pipeline: **CloudTrail → EventBridge → Lambda → S3 B
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
+> A visual diagram is available at [`infrastructure/diagrams/architecture.png`](infrastructure/diagrams/architecture.png).
+
 ---
 
 ## Attack Scenarios & Results
 
 ### Scenario 1 — Honeypot S3 Access (Automated Block)
-- **Attacker:** `test-exfil-user` (IAM user with stolen access key)
-- **Attacker IP:** `193.160.245.168` (Windows 11, aws-cli/1.44.15)
+- **Attacker:** IAM user with simulated stolen access key
 - **Files accessed:** `leaked-credentials.txt`, `customer-data.sql`
 - **Detection-to-block time: 9 seconds**
 - **Automated response:** Lambda wrote `aws:SourceIp` Deny rule to S3 bucket policy
@@ -74,7 +80,7 @@ detection-to-response pipeline: **CloudTrail → EventBridge → Lambda → S3 B
 - [View Full Incident Report](incident-simulations/scenario-2-data-exfiltration/incident-report.md)
 
 ### Scenario 3 — Privilege Escalation Detection
-- **Issue:** IAM user `test-overprivileged-user` with `Action: "*", Resource: "*"` policy
+- **Issue:** IAM user with `Action: "*", Resource: "*"` over-permissive inline policy
 - **Detection:** IAM Access Analyzer found the overly permissive inline policy
 - **Remediation:** Replaced with scoped least-privilege policy
 - [View Full Incident Report](incident-simulations/scenario-3-privilege-escalation/incident-report.md)
@@ -100,11 +106,11 @@ detection-to-response pipeline: **CloudTrail → EventBridge → Lambda → S3 B
 ```
 aws-security-operations-lab/
 ├── README.md                          ← This file
+├── SECURITY.md                        ← Responsible disclosure policy
 ├── .gitignore
-├── SECURITY.md
 │
 ├── lambda-functions/
-│   ├── honeypot-incident-responder/   ← WORKING: blocks attacker IP via S3 policy
+│   ├── honeypot-incident-responder/   ← Blocks attacker IP via S3 bucket policy
 │   ├── ec2-isolate/                   ← Moves compromised EC2 to quarantine SG
 │   └── iam-key-rotation/              ← Deactivates and rotates compromised IAM keys
 │
@@ -113,7 +119,7 @@ aws-security-operations-lab/
 ├── cloudwatch-metrics/                ← Metric filters, alarm configs, Insights queries
 │
 ├── incident-simulations/
-│   ├── scenario-1-honeypot-access/    ← Real attack + real CloudTrail evidence
+│   ├── scenario-1-honeypot-access/    ← Simulated attack + CloudTrail evidence
 │   ├── scenario-2-data-exfiltration/
 │   └── scenario-3-privilege-escalation/
 │
@@ -149,7 +155,7 @@ Inline policies are automatically deleted with the role and cannot be accidental
 | Detection-to-block latency | **9 seconds** (CloudTrail → EventBridge → Lambda → S3 Policy) |
 | False positive risk | Low — EventBridge rule scoped to specific bucket and event |
 | IAM permissions scope | 3 actions only: `s3:GetBucketPolicy`, `s3:PutBucketPolicy`, `sns:Publish` |
-| Idempotency |  Duplicate blocks prevented via SID-based policy check |
+| Idempotency | Duplicate blocks prevented via SID-based policy check |
 
 ---
 
@@ -168,9 +174,17 @@ Inline policies are automatically deleted with the role and cannot be accidental
 - [ ] Slack webhook integration for real-time SOC alerts
 - [ ] AWS WAF IP set integration for CloudFront-fronted resources
 - [ ] GuardDuty threat intelligence feed integration
-- [ ] MITRE ATT&CK mapping for each scenario
+- [ ] MITRE ATT\&CK mapping for each scenario
 - [ ] Security dashboard in CloudWatch
 
 ---
 
-*Built as a hands-on cybersecurity portfolio project. All credentials and data shown are fake and used for simulation purposes only.*
+## Security Notice
+
+All credentials, IP addresses, bucket names, and account IDs shown in this repository
+are either **example values** or **have been rotated/decommissioned** after the lab.
+No real credentials are present. See [`SECURITY.md`](SECURITY.md) for the responsible disclosure policy.
+
+---
+
+*Built as a hands-on cybersecurity portfolio project demonstrating real-world SOC automation skills.*
