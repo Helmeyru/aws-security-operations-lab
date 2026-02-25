@@ -12,7 +12,7 @@
 | **Duration** | ~25 hours |
 | **Region** | us-east-1 (N. Virginia) |
 | **Skills** | Cloud Security · Incident Response · IAM · Lambda · EventBridge · CloudTrail |
-| **Status** | ✅ Complete — all scenarios executed and documented with real evidence |
+| **Status** | Complete — all scenarios executed and documented with real evidence |
 
 This lab simulates a realistic AWS environment under attack and demonstrates the full
 detection-to-response pipeline: **CloudTrail → EventBridge → Lambda → S3 Bucket Policy / EC2 Isolation → SNS Alert**.
