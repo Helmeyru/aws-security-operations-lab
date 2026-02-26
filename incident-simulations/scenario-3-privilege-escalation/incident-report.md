@@ -110,7 +110,7 @@ a standard post-exploitation enumeration step.
 
 1. `DangerousAdminPolicy` deleted from `test-overprivileged-user`
 2. `LeastPrivilegePolicy` applied with scoped S3 read-only permissions
-3. Access key `AKIAU6WMXVKPJ72RS6FT` deactivated
+3. Access key `AKI********AU` deactivated
 4. IAM Access Analyzer finding marked as resolved
 5. Full timeline documented
 

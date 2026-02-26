@@ -47,9 +47,9 @@ was authorized but the pattern was malicious.
 
 | Field            | Value                                                        |
 |------------------|--------------------------------------------------------------|
-| Source IP        | `3.86.208.137` (AWS CloudShell us-east-1)                    |
+| Source IP        | `3X.X.X.X` (AWS CloudShell us-east-1)                    |
 | IAM User         | `test-exfil-user`                                            |
-| User ARN         | `arn:aws:iam::340805528222:user/test-exfil-user`             |
+| User ARN         | `arn:aws:iam::*:user/test-exfil-user`             |
 | Access Key       | `AKIAU6WMXVKPGQRLXCVQ` (long-term key)                       |
 | Tool Used        | `aws s3 sync` (automated bulk download)                      |
 | Platform         | AWS CloudShell Linux (amzn2023)                              |
@@ -61,7 +61,7 @@ was authorized but the pattern was malicious.
 
 | Minute Window            | Downloads | Status  |
 |--------------------------|-----------|---------|
-| 2026-02-23T20:59:00.000Z | 6         | ⚠️ ALARM |
+| 2026-02-23T20:59:00.000Z | 6         | ALARM |
 | 2026-02-23T20:58:00.000Z | 2         | Normal  |
 | 2026-02-23T20:57:00.000Z | 1         | Normal  |
 | 2026-02-23T20:56:00.000Z | 2         | Normal  |
@@ -105,7 +105,7 @@ fields @timestamp, sourceIPAddress, userIdentity.arn
 
 ## Containment Actions Taken
 
-1. `test-exfil-user` access key `AKIAU6WMXVKPGQRLXCVQ` deactivated manually
+1. `test-exfil-user` access key `******CVQ` deactivated manually
 2. CloudTrail evidence preserved in CloudWatch Logs
 3. Incident documented with full forensic timeline
 

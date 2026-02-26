@@ -33,9 +33,9 @@ the attacker's IP within **9 seconds** of the first file access.
 
 | Field | Value |
 |---|---|
-| Source IP | `193.160.245.168` |
+| Source IP | `19X.X.X.X` |
 | IAM User | `test-exfil-user` |
-| Access Key | `AKIAU6WMXVKPN2X2P3NP` |
+| Access Key | `****************` |
 | User Agent | `aws-cli/1.44.15` on **Windows 11 x64** |
 | OS | Windows 11 (amd64) |
 | Auth Method | SigV4 / AuthHeader |
@@ -53,14 +53,14 @@ The 10-minute gap between access #2 and access #3 suggests manual review of down
 {
   "eventTime": "2026-02-23T00:34:16Z",
   "eventName": "GetObject",
-  "sourceIPAddress": "193.160.245.168",
+  "sourceIPAddress": "19X.X.X.X",
   "userIdentity": {
     "type": "IAMUser",
-    "arn": "arn:aws:iam::340805528222:user/test-exfil-user",
+    "arn": "arn:aws:iam::3***:user/test-exfil-user",
     "accessKeyId": "AKIAU6WMXVKPN2X2P3NP"
   },
   "requestParameters": {
-    "bucketName": "sec-lab-honeypot-1771026055",
+    "bucketName": "sec-lab-honeypot-*",
     "key": "leaked-credentials.txt"
   },
   "additionalEventData": {
