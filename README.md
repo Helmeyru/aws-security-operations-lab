@@ -60,7 +60,7 @@ detection-to-response pipeline: **CloudTrail → EventBridge → Lambda → S3 B
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-> A visual diagram is available at [`infrastructure/diagrams/architecture.pjp`](infrastructure/diagrams/architecture.png).
+> A visual diagram is available at [`infrastructure/diagrams/architecture.jpg`](infrastructure/diagrams/architecture.jpg).
 
 ---
 
