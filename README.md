@@ -23,6 +23,14 @@ This lab simulates a realistic AWS environment under attack and demonstrates the
 detection-to-response pipeline: **CloudTrail → EventBridge → Lambda → S3 Bucket Policy / EC2 Isolation → SNS Alert**.
 
 ---
+## 🇸🇦 ملخص قصير (للمراجعين في السعودية)
+
+هذا المشروع عبارة عن مختبر عملي لأمن السحابة على AWS يحاكي هجمات حقيقية
+(وصول إلى Honeypot، تهريب بيانات من S3، وتصعيد صلاحيات عبر IAM) مع اكتشاف
+آلي واستجابة تلقائية باستخدام CloudTrail و EventBridge و Lambda و SNS.
+يهدف المختبر إلى عرض مهاراتي في بناء قدرات SOC على AWS وفق ضوابط NCA و SAMA.
+
+
 
 ## Architecture
 
