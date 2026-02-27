@@ -30,6 +30,22 @@ detection-to-response pipeline: **CloudTrail → EventBridge → Lambda → S3 B
 آلي واستجابة تلقائية باستخدام CloudTrail و EventBridge و Lambda و SNS.
 يهدف المختبر إلى عرض مهاراتي في بناء قدرات SOC على AWS وفق ضوابط NCA و SAMA.
 
+---
+## Design Philosophy: Why "Production-Grade"?
+
+> *"What makes this production-grade versus a tutorial project?"*
+
+Three things separate this from tutorials:
+
+1. **Idempotent automation** — The Lambda function checks for existing SIDs before adding new deny rules to S3 bucket policies. Tutorials overwrite policies blindly. That creates duplicate statements that eventually break the 20KB policy limit in real accounts. I built the guardrail because I've seen production break from "working" scripts that weren't idempotent.
+
+2. **Least-privilege by default** — The responder Lambda has exactly 3 IAM actions: `s3:GetBucketPolicy`, `s3:PutBucketPolicy`, `sns:Publish`. No wildcards. Tutorials use `AdministratorAccess` "to keep it simple." I scoped to the single bucket and SNS topic because over-permissioned automation accounts become attack vectors themselves.
+
+3. **Measurable SLA with Saudi context** — 9-second detection-to-block isn't just a number. SAMA requires "near real-time" containment (<5 minutes). I measured it, documented it, and mapped it to NCA ECC 8.1. Tutorials say "alerts get sent." Production systems prove containment time.
+
+**Honest limitation:** It's production-*grade* in design and automation quality — not scale. I ran it in a $50-budget lab account, not a multi-account enterprise environment. But the architecture decisions (EventBridge direct integration vs CloudWatch metric filters, bucket policies vs security groups) are the same ones I'd make in production — with justification documented in this README.
+
+---
 
 
 ## Architecture
