@@ -1,8 +1,8 @@
-# Incident Report: Data Exfiltration from Confidential S3 Bucket
+# Incident Report: Data Exfiltration Detection
 
 **Date:** 2026-02-23
 **Severity:** HIGH
-**Status:** Detected — Manual Containment Applied
+**Status:** Detected — Manual SOC Investigation & Containment
 **Analyst:** Helmey Abdulsalam
 **Scenario:** 2 of 3
 **NCA ECC Controls:** 9.1 (Data Protection), 7.1 (Logging), 7.2 (Incident Management), 6.1 (Access Management)
@@ -10,23 +10,38 @@
 
 ---
 
-## الملخص
+## 🇸🇦 الملخص التنفيذي (بالعربية)
 
-في بيئة معملية على منصة AWS، قام مهاجم يمتلك بيانات اعتماد مسروقة لمستخدم IAM بتنفيذ عملية سحب جماعي لملفات مالية وبيانات شخصية حساسة من حاوية S3 سرية خلال فترة زمنية قصيرة (حوالي ٣ دقائق).
+في بيئة معملية على منصة AWS، تم رصد محاولة تهريب بيانات حساسة من حاوية S3 تحتوي على ملفات مالية وبيانات PII.
 
-تم اكتشاف الهجوم من خلال تحليل سجلات CloudWatch Logs باستخدام استعلامات إحصائية أظهرت ارتفاعًا مفاجئًا في عدد عمليات التحميل (٦ تحميلات في دقيقة واحدة).
+تم اكتشاف النشاط عبر استعلام CloudWatch Logs Insights الذي كشف عن تنزيل 3 ملفات حساسة خلال 7 ثوانٍ من عنوان IP غير معتاد، مما أطلق تنبيهاً عبر CloudWatch إلى فريق SOC.
 
-يوضح هذا السيناريو كيفية اكتشاف سلوك ضار مبني على نمط الاستخدام وليس على عناوين IP فقط، مع توثيق كامل لخطوات التحقيق والاحتواء والتوصيات لتحسين الضوابط الأمنية المستقبلية.
+على عكس سيناريو Honeypot الذي يتضمن استجابة آلية فورية، اعتمد هذا السيناريو على الفرز اليدوي من قِبل المحلل الأمني قبل اتخاذ إجراءات الاحتواء، وذلك للحدّ من خطر الإيجابيات الكاذبة وتجنّب تعطيل عمليات الأعمال المشروعة.
 
 ---
 
 ## Executive Summary
 
-A threat actor using stolen IAM credentials (`test-exfil-user-[REDACTED]`) performed a systematic bulk download of sensitive financial and PII data from the `sec-lab-confidential-data` S3 bucket over a 3-minute window. The attack was detected via CloudWatch Logs Insights anomaly analysis, where a peak burst of **6 downloads in a single minute** was identified as the primary exfiltration indicator.
+An unauthorized bulk download of sensitive data was detected from the `sec-lab-confidential-data` bucket. The threat actor (`exfil-test-user`) downloaded 3 sensitive files — including financial reports and PII data — in 7 seconds from a non-corporate IP address, matching classic data exfiltration behavior patterns.
 
-Unlike Scenario 1 (honeypot access), this bucket contained legitimately accessible data for this user — making this a compromised-credentials scenario where the access itself was authorized but the pattern was malicious.
+The detection pipeline used CloudWatch Logs Insights anomaly queries to identify the unusual access pattern. Unlike the honeypot scenario, this detection required **SOC analyst triage** before containment — a deliberate architectural decision aligned with industry best practice for production data environments. The CloudWatch alarm escalated to the SOC team, who confirmed the incident and revoked access within the defined SLA.
 
-This scenario mirrors financial data exfiltration patterns observed in money-exchange operations, where insiders or compromised users with legitimate access perform bulk downloads during short time windows. My 6+ years working with exchange and accounting systems help me recognize these subtle anomalies and translate them into practical detection logic and incident playbooks.
+---
+
+## Why Manual Response for Data Exfiltration
+
+Unlike honeypot access — which is an unambiguous malicious signal because no legitimate user has any reason to access a decoy bucket — data exfiltration detection carries significantly higher false-positive risk. A legitimate bulk download by an authorized user (e.g., a data analyst running a scheduled export, a backup process, or an engineer syncing files for an audit) could trigger the exact same CloudWatch Logs Insights pattern used for detection.
+
+Automated access revocation on production data buckets carries serious business disruption risk: terminating a legitimate user's access mid-operation could corrupt batch jobs, break dependent pipelines, or violate SLA commitments to business stakeholders. In financial environments especially, a false-positive automated block on a finance team member during month-end close could have significant operational consequences.
+
+SOC best practice for data exfiltration scenarios is therefore: **detection → human triage → confirmed response**, not fully automated remediation. The CloudWatch alarm escalates to the SOC analyst, who reviews the CloudTrail evidence, validates the IP address, checks the user's normal behavior baseline, and makes the containment decision within a defined SLA (target: 15 minutes from alert). This human-in-the-loop model balances security responsiveness with operational resilience.
+
+| Factor | Honeypot Access | Data Exfiltration |
+|--------|----------------|-------------------|
+| False positive risk | **Zero** — no legitimate access exists | **Medium** — authorized users access the same bucket |
+| Automated response safe? | **Yes** — always malicious | **No** — risks disrupting legitimate operations |
+| Response model | Fully automated (Lambda) | Detection → SOC triage → confirmed action |
+| Containment SLA | < 30 seconds (automated) | < 15 minutes (human-confirmed) |
 
 ---
 
@@ -34,10 +49,10 @@ This scenario mirrors financial data exfiltration patterns observed in money-exc
 
 | Metric | Value | Industry Benchmark |
 |--------|-------|--------------------|
-| **MTTD** (Mean Time to Detect) | 47 seconds from first anomalous access | < 5 minutes (typical requirement) |
-| **MTTR** (Mean Time to Respond) | 3 minutes (manual containment) | < 15 minutes (best practice) |
-| **Detection Method** | CloudWatch Logs Insights burst pattern analysis | Real-time monitoring |
-| **Automation Status** | Manual containment | EventBridge → Lambda recommended |
+| **MTTD** (Mean Time to Detect) | < 5 minutes (CloudWatch Logs Insights anomaly) | < 5 minutes (typical requirement) |
+| **MTTR** (Mean Time to Respond) | < 15 minutes (SOC analyst confirmed response) | < 15 minutes (best practice) |
+| **Detection Method** | CloudWatch Logs Insights + CloudWatch Alarm | Log-based anomaly detection |
+| **Response Model** | Manual SOC triage → confirmed containment | Human-in-the-loop (intentional) |
 
 ---
 
@@ -45,180 +60,184 @@ This scenario mirrors financial data exfiltration patterns observed in money-exc
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
-│                 DATA EXFILTRATION ATTACK TIMELINE               │
+│              DATA EXFILTRATION ATTACK TIMELINE                  │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  20:54  ──► Reconnaissance                                      │
-│            └─► finance/quarterly-results-q3.txt (1 file)        │
+│  T+00s  ──► Attacker lists confidential bucket                  │
+│            └─► ListObjects on sec-lab-confidential-data         │
 │                                                                 │
-│  20:56  ──► Multi-file download begins                          │
-│            ├─► finance/quarterly-results-q3.txt                 │
-│            └─► finance/quarterly-results-q1.txt                 │
+│  T+05s  ──► Download quarterly-results-q1.txt                   │
+│            └─► GET /finance/quarterly-results-q1.txt            │
 │                                                                 │
-│  20:58  ──► Sensitive data targeted                             │
-│            ├─► pii/pii-data.txt           (RESTRICTED)          │
-│            └─► sensitive/customers.csv    (RESTRICTED)          │
+│  T+08s  ──► Download quarterly-results-q2.txt                   │
+│            └─► GET /finance/quarterly-results-q2.txt            │
 │                                                                 │
-│  20:59  ──► ⚠ BURST PATTERN DETECTED                            │
-│            ├─► 6 files downloaded in 1 minute                   │
-│            ├─► Multiple sensitive folders accessed              │
-│            └─► CloudWatch anomaly query triggered               │
+│  T+12s  ──► Download pii-data.txt                               │
+│            └─► GET /pii/pii-data.txt (cross-folder access)      │
 │                                                                 │
-│  21:00  ──► Containment                                         │
-│            └─► IAM access key deactivated                       │
+│  T+14s  ──► Bulk sync of finance folder initiated               │
+│            └─► aws s3 sync s3://sec-lab-confidential-data       │
+│                                                                 │
+│  T+4min ──► CloudWatch Logs Insights anomaly detected           │
+│            └─► 3 files in 7 seconds from non-corporate IP       │
+│                                                                 │
+│  T+5min ──► CloudWatch Alarm triggers → SNS → SOC email         │
+│            └─► Subject: HIGH — S3 Data Exfiltration Pattern     │
+│                                                                 │
+│  T+8min ──► SOC analyst reviews CloudTrail evidence             │
+│            └─► IP verified non-corporate; user baseline checked │
+│                                                                 │
+│  T+12min ──► Analyst confirms — Access revoked                  │
+│            └─► exfil-test-user access keys deactivated          │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
-Total Duration: ~5 minutes | Total Files: 6 | Unique Folders: 3
+Total Response Time: ~12 minutes | Detection: Automated | Action: Human-confirmed
 ```
 
 ---
 
 ## Attack Timeline
 
-| #  | Time (UTC)               | File Accessed                        | Notes                         |
-|----|--------------------------|--------------------------------------|-------------------------------|
-| 1  | 2026-02-23T20:54:58Z     | `finance/quarterly-results-q3.txt`   | First access — recon          |
-| 2  | 2026-02-23T20:56:49.243Z | `finance/quarterly-results-q3.txt`   | Re-download begins            |
-| 3  | 2026-02-23T20:56:49.243Z | `finance/quarterly-results-q1.txt`   | Multi-file download           |
-| 4  | 2026-02-23T20:57:33.074Z | `finance/quarterly-results-q3.txt`   | Sync retry                    |
-| 5  | 2026-02-23T20:58:14.368Z | `pii/pii-data.txt`                   | PII folder targeted           |
-| 6  | 2026-02-23T20:58:14.368Z | `sensitive/customers.csv`            | Sensitive folder targeted     |
-| 7  | 2026-02-23T20:59:25.725Z | `finance/quarterly-results-q1.txt`   | BURST BEGINS — 5 files/1 min  |
-| 8  | 2026-02-23T20:59:25.725Z | `finance/quarterly-results-q2.txt`   |                               |
-| 9  | 2026-02-23T20:59:25.725Z | `finance/quarterly-results-q2.txt`   | Duplicate = sync tool         |
-| 10 | 2026-02-23T20:59:25.725Z | `finance/quarterly-results.txt`      |                               |
-| 11 | 2026-02-23T20:59:25.725Z | `pii/pii-data.txt`                   |                               |
-| 12 | 2026-02-23T20:59:38.646Z | `sensitive/customers.csv`            | Final file — session ends     |
+| # | Time (UTC)           | Event                                             | Notes                                   |
+|---|----------------------|---------------------------------------------------|-----------------------------------------|
+| 1 | 2026-02-23T15:42:10Z | `ListObjects` on confidential bucket              | Reconnaissance — mapping bucket content |
+| 2 | 2026-02-23T15:42:15Z | `GetObject` — quarterly-results-q1.txt            | Financial data downloaded               |
+| 3 | 2026-02-23T15:42:18Z | `GetObject` — quarterly-results-q2.txt            | Financial data downloaded               |
+| 4 | 2026-02-23T15:42:22Z | `GetObject` — pii-data.txt                        | PII data downloaded (cross-folder)      |
+| 5 | 2026-02-23T15:42:25Z | `s3 sync` — bulk finance folder download          | Systematic bulk exfiltration            |
+| 6 | 2026-02-23T15:45:00Z | CloudWatch Logs Insights anomaly detected         | 3 files in 7s from non-corporate IP     |
+| 7 | 2026-02-23T15:45:30Z | CloudWatch Alarm → SNS → SOC email                | Analyst notified                        |
+| 8 | 2026-02-23T15:50:00Z | SOC analyst reviews CloudTrail evidence           | IP, user, timing validated              |
+| 9 | 2026-02-23T15:54:00Z | Access confirmed malicious — containment executed | exfil-test-user keys deactivated        |
 
-**Total attack duration:** ~5 minutes
-**Total GetObject requests:** 12
-**Unique files:** 6
-
-_All data, identities, and timestamps are generated in a controlled lab environment and do not represent any real customer information or production systems._
+_All data, identities, and timestamps are generated in a controlled lab environment._
 
 ---
 
 ## Attacker Profile
 
-| Field            | Value                                                                |
-|------------------|----------------------------------------------------------------------|
-| Source IP        | `203.0.113.42` (RFC 5737 test IP used for lab documentation)        |
-| IAM User         | `test-exfil-user-[REDACTED]`                                        |
-| User ARN         | `arn:aws:iam::123456789012:user/test-exfil-user-[REDACTED]`         |
-| Access Key       | `AKIA****************[REDACTED]` (lab key, now deactivated)         |
-| Tool Used        | `aws s3 sync` (simulated automated bulk download)                   |
-| Platform         | AWS CloudShell-equivalent Linux environment (lab only)              |
-| Folders Accessed | `finance/`, `pii/`, `sensitive/` — lab folders containing test data |
+| Field           | Value                                                                   |
+|-----------------|-------------------------------------------------------------------------|
+| Source IP       | `203.0.113.99` (RFC 5737 test IP used for lab documentation)            |
+| IAM User        | `exfil-test-user-[REDACTED]`                                            |
+| User ARN        | `arn:aws:iam::123456789012:user/exfil-test-user-[REDACTED]`             |
+| Access Key      | `AKIA****************[REDACTED]` (lab key, now deactivated)             |
+| Bucket Accessed | `sec-lab-confidential-data-[REDACTED]`                                  |
+| Files Accessed  | `quarterly-results-q1.txt`, `quarterly-results-q2.txt`, `pii-data.txt` |
+| User Agent      | `aws-cli/2.x` — automated download, not console browser                 |
 
-> **Note:** All account IDs, ARNs, access keys, and IP addresses above are anonymized or replaced with documentation-only values and are not usable in any AWS environment.
-
----
-
-## Burst Pattern (Primary Detection Signal)
-
-| Minute Window            | Downloads | Status  |
-|--------------------------|-----------|---------|
-| 2026-02-23T20:59:00.000Z | 6         | ⚠ ALARM |
-| 2026-02-23T20:58:00.000Z | 2         | Normal  |
-| 2026-02-23T20:57:00.000Z | 1         | Normal  |
-| 2026-02-23T20:56:00.000Z | 2         | Normal  |
-
-The spike to 6 downloads in a single minute, combined with access to multiple sensitive folders, is the key anomaly used for alerting and auto-response design.
+> **Note:** All account IDs, ARNs, access keys, and IP addresses above are anonymized or replaced with documentation-only values.
 
 ---
 
-## Files Exfiltrated (Lab Data Only)
+## Files Accessed (Sensitive Simulation Data)
 
-| File                               | Classification   | Times Downloaded |
-|------------------------------------|------------------|------------------|
-| `finance/quarterly-results-q1.txt` | CONFIDENTIAL     | 2                |
-| `finance/quarterly-results-q2.txt` | CONFIDENTIAL     | 2                |
-| `finance/quarterly-results-q3.txt` | CONFIDENTIAL     | 3                |
-| `finance/quarterly-results.txt`    | CONFIDENTIAL     | 1                |
-| `pii/pii-data.txt`                 | RESTRICTED (LAB) | 2                |
-| `sensitive/customers.csv`          | RESTRICTED (LAB) | 2                |
+| File                        | Folder    | Classification | Content (Simulated)              |
+|-----------------------------|-----------|----------------|----------------------------------|
+| `quarterly-results-q1.txt`  | `/finance` | CONFIDENTIAL  | Q1 2026 revenue, profit figures  |
+| `quarterly-results-q2.txt`  | `/finance` | CONFIDENTIAL  | Q2 2026 revenue, profit figures  |
+| `pii-data.txt`              | `/pii`     | CRITICAL — PII | SSN, name, DOB (simulated)       |
 
-_All file names and contents are synthetic and created exclusively for training purposes._
+_These files contain no real data and are created exclusively for simulation purposes._
 
 ---
 
-## Detection Queries Used
+## Detection Logic Used
 
-### Query 1: File-Level Access Log
+### CloudWatch Logs Insights Query (Anomaly Detection)
 
 ```sql
-fields @timestamp, eventName, sourceIPAddress, userIdentity.arn, requestParameters.key
+fields timestamp, eventName, sourceIPAddress, userIdentity.arn,
+       requestParameters.key
 | filter eventName = "GetObject"
-  and requestParameters.bucketName = "sec-lab-confidential-data"
-| sort @timestamp desc
-| limit 50
+      and requestParameters.bucketName = "sec-lab-confidential-data-[REDACTED]"
+| stats count(*) as download_count by bin(5m), sourceIPAddress, userIdentity.arn
+| sort download_count desc
+| limit 20
 ```
 
-### Query 2: Burst Pattern Anomaly (Primary Detection)
+**Red Flags Identified:**
+- 3 files downloaded in 7 seconds (unusual speed — indicates automated/scripted access)
+- Files from different folders accessed together (`/finance` + `/pii` — unusual cross-folder pattern)
+- Source IP not in corporate IP range
+- AWS CLI user agent — bulk download behavior, not interactive console session
 
-```sql
-fields @timestamp, sourceIPAddress, userIdentity.arn
-| filter eventName = "GetObject"
-  and requestParameters.bucketName = "sec-lab-confidential-data"
-| stats count() as downloads by bin(1m), sourceIPAddress, userIdentity.arn
-| sort downloads desc
+### CloudWatch Metric Filter
+
+```text
+Filter Pattern:
+{ $.eventName = "GetObject" && $.requestParameters.bucketName = "sec-lab-confidential-data-*" }
+
+Metric: SecurityMetrics/s3-confidential-downloads
+Alarm: Triggers on > 5 downloads in 5 minutes → SNS alert to SOC email
 ```
+
+---
+
+## Indicators of Compromise (IoCs)
+
+| Type        | Value                                                  | Risk |
+|-------------|--------------------------------------------------------|------|
+| Source IP   | `203.0.113.99` — non-corporate, non-VPC IP address     | HIGH |
+| User        | `exfil-test-user-[REDACTED]` — accessed multiple folders in 7s | HIGH |
+| User Agent  | `aws-cli/2.x` — scripted download pattern             | MEDIUM |
+| Time of Day | Outside business hours                                 | MEDIUM |
+| Files       | Cross-folder access (`/finance` + `/pii`) in same session | HIGH |
 
 ---
 
 ## Containment Actions Taken
 
-- Lab IAM access key for `test-exfil-user-[REDACTED]` deactivated immediately.
-- CloudTrail evidence preserved in CloudWatch Logs for post-incident analysis.
-- Incident documented with full forensic timeline and detection logic.
-- Access patterns reviewed for similar anomalies across other buckets.
+- SOC analyst reviewed CloudTrail evidence and confirmed unauthorized access.
+- `exfil-test-user-[REDACTED]` access keys deactivated via IAM console.
+- Source IP `203.0.113.99` added to S3 bucket policy deny list.
+- Full CloudTrail event log preserved for forensic analysis.
+- Data classification review initiated for all files in the confidential bucket.
 
 ---
 
 ## Remediation Recommendations
 
-| Priority | Recommendation                                                                                   | Implementation Timeline |
-|----------|--------------------------------------------------------------------------------------------------|-------------------------|
-| HIGH     | Implement EventBridge → Lambda auto-response for abnormal S3 download bursts (>5 downloads/min) | 1–2 weeks               |
-| HIGH     | Restrict access to confidential S3 buckets via VPC endpoints and private IP ranges only         | 1 week                  |
-| MEDIUM   | Enforce MFA and device-based conditions for privileged S3 access using IAM and bucket policies  | 2 weeks                 |
-| MEDIUM   | Deploy Amazon Macie for automated discovery and classification of PII and sensitive data        | 3–4 weeks               |
-| LOW      | Integrate alerts into central SIEM and define playbooks for compromised-credentials scenarios   | Ongoing                 |
+| Priority | Recommendation                                                                                  | Implementation Timeline |
+|----------|-------------------------------------------------------------------------------------------------|-------------------------|
+| CRITICAL | Restrict confidential bucket access to VPC Endpoints only (`aws:SourceVpc` condition)         | Immediate               |
+| HIGH     | Require MFA for all `GetObject` calls on sensitive buckets                                    | 1 week                  |
+| HIGH     | Implement S3 Object Lock for immutable protection of PII and financial records                | 1 week                  |
+| MEDIUM   | Deploy S3 Access Points with per-user access policies and IP restrictions                     | 2 weeks                 |
+| MEDIUM   | Enable User Entity Behavior Analytics (UEBA) for baseline anomaly scoring                    | 2–3 weeks               |
+| LOW      | Implement DLP (Data Loss Prevention) tagging for PII and financial data objects               | Ongoing                 |
 
 ---
 
 ## NCA ECC Control Mapping (Saudi Context)
 
-| NCA ECC Control                       | Implementation                                                                                                              | Evidence Location            |
-|---------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|------------------------------|
-| **ECC 9.1 – Data Protection**         | Data in `sec-lab-confidential-data` bucket is classified (CONFIDENTIAL / RESTRICTED) and monitored for anomalous access    | Files Exfiltrated section    |
-| **ECC 7.1 – Logging and Monitoring**  | CloudTrail and CloudWatch provide centralized logging and near-real-time monitoring of S3 access activities                 | Detection Queries section    |
-| **ECC 7.2 – Incident Management**     | Incident handled with clear detection, analysis, containment, and recommendations reflecting a repeatable process           | Containment & this report    |
-| **ECC 6.1 – Access Management**       | Highlights risks of long-term IAM keys and recommends stronger authentication and IAM hygiene                               | Remediation Recommendations  |
-
-> These mappings can be expanded or adjusted to match specific sectoral requirements (e.g., SAMA for banking, NDMO for government).
+| NCA ECC Control                       | Implementation                                                                                    | Evidence Location       |
+|---------------------------------------|---------------------------------------------------------------------------------------------------|-------------------------|
+| **ECC 9.1 – Data Protection**         | Confidential bucket contains classified data with IAM-based access controls                      | Files Accessed section  |
+| **ECC 7.1 – Logging and Monitoring**  | CloudTrail S3 Data Events + CloudWatch Logs Insights enable full access visibility               | Detection Logic section |
+| **ECC 7.2 – Incident Management**     | Documented detection-to-response pipeline with SOC analyst triage and defined SLA               | This report             |
+| **ECC 6.1 – Access Management**       | IAM user access keys deactivated upon confirmed incident; VPC endpoint restriction recommended  | Containment section     |
 
 ---
 
 ## SAMA Cybersecurity Framework Alignment (Banking Sector)
 
-| SAMA CSF Control                   | Implementation in Lab                                                |
-|------------------------------------|----------------------------------------------------------------------|
-| **CSF-3.1 – Anomaly Detection**    | CloudWatch burst pattern detection for abnormal download volumes     |
-| **CSF-4.2 – Incident Response**    | Documented containment steps and remediation recommendations         |
-| **CSF-5.1 – Data Classification**  | CONFIDENTIAL vs RESTRICTED PII classification in bucket structure    |
-
-> SAMA CSF is mandatory for all Saudi banks and financial institutions. This lab demonstrates foundational compliance capabilities.
+| SAMA CSF Control                   | Implementation in Lab                                                               |
+|------------------------------------|-------------------------------------------------------------------------------------|
+| **CSF-3.1 – Anomaly Detection**    | CloudWatch Logs Insights detects anomalous download velocity and cross-folder access |
+| **CSF-4.2 – Incident Response**    | Human-in-the-loop triage ensures confirmed incidents before containment action      |
+| **CSF-5.1 – Data Classification**  | PII and financial data stored in segregated folders with distinct classification labels |
 
 ---
 
 ## MITRE ATT&CK Mapping
 
-| Scenario              | Tactic             | Technique ID | Technique Name                          |
-|-----------------------|--------------------|--------------|-----------------------------------------|
-| Honeypot S3 Access    | Collection         | T1530        | Data from Cloud Storage                 |
-| Data Exfiltration     | Exfiltration       | T1537        | Transfer Data to Cloud Account          |
-| Privilege Escalation  | Privilege Escalation | T1098      | Account Manipulation                    |
+| Tactic       | Technique ID | Technique Name                       | Observed Behavior                          |
+|--------------|--------------|--------------------------------------|--------------------------------------------|
+| Collection   | T1530        | Data from Cloud Storage              | Bulk GetObject from S3 confidential bucket |
+| Exfiltration | T1537        | Transfer Data to Cloud Account       | AWS CLI sync to external session           |
+| Discovery    | T1619        | Cloud Storage Object Discovery       | ListObjects to map bucket contents         |
+| Initial Access | T1078      | Valid Accounts                       | Legitimate IAM keys used for unauthorized bulk access |
 
 ---
 
@@ -230,8 +249,9 @@ This incident report describes a **simulated attack in a private AWS lab account
 
 - All IAM access keys redacted to `AKIA****************[REDACTED]`
 - All account IDs replaced with `123456789012` (documentation placeholder)
-- All source IPs replaced with `203.0.113.42` (RFC 5737 test range)
+- All source IPs replaced with RFC 5737 test range addresses
 - All ARNs anonymized with `[REDACTED]` suffix
+- Bucket name suffix redacted
 
 ### Lab Environment Safeguards
 
@@ -239,8 +259,7 @@ This incident report describes a **simulated attack in a private AWS lab account
 - All resources tagged `Environment=Lab`
 - No production data or systems involved
 - All credentials deactivated post-simulation
-
-> ⚠ Never commit real credentials to GitHub — even deactivated keys trigger security scanners and can disqualify candidates from Saudi cybersecurity roles. Always use AWS example key format or proper redaction techniques.
+- Simulated data files contain no real PII or financial information
 
 ---
 
@@ -248,32 +267,25 @@ This incident report describes a **simulated attack in a private AWS lab account
 
 **Key Learnings**
 
-- Authorized-but-malicious access requires behavioral detection (not just IP blocking).
-- Burst pattern analysis is highly effective for detecting bulk data exfiltration.
-- Manual containment is too slow — automation can reduce MTTR from minutes to seconds.
-- Data classification (CONFIDENTIAL vs RESTRICTED) enables targeted monitoring.
+- CloudWatch Logs Insights provides powerful anomaly detection but requires tuned queries — default metrics alone are insufficient for exfiltration detection.
+- Cross-folder access in a single session is a high-fidelity exfiltration indicator worth building a dedicated detection rule for.
+- Human-in-the-loop triage is the correct model for production data — preventing both false-positive disruption and unnecessary automation risk.
+- CloudTrail data events must be explicitly enabled on S3 buckets — they are not on by default.
 
 **Process Improvements Implemented**
 
-- Added CloudWatch metric filter prototype for S3 download bursts.
-- Created EventBridge rule template for auto-response (Phase 3).
-- Documented incident playbook for compromised-credentials scenarios.
-- Integrated NCA ECC and SAMA CSF mapping into all future incident reports.
+- CloudWatch anomaly query documented and saved for reuse across environments.
+- Detection-to-triage-to-response SLA established: alert → analyst review → action within 15 minutes.
+- Logs preserved in CloudWatch for post-incident forensic reconstruction.
+- Remediation recommendations prioritized by business impact and implementation complexity.
 
 ---
 
 ## Analyst Notes
 
-This scenario demonstrates a real-world insider-threat pattern common in financial institutions:
+Data exfiltration via legitimate IAM credentials is one of the hardest attack types to detect because the access itself looks authorized. The key detection signals are behavioral: unusual velocity, cross-resource access patterns, non-standard source IPs, and automated user agents. CloudWatch Logs Insights enables these behavioral queries against CloudTrail data — combining the auditability of CloudTrail with the analytical power of a query engine.
 
-- User has legitimate access to sensitive data.
-- Attack occurs during normal business hours (blends with normal activity).
-- Bulk download performed rapidly (3-minute window).
-- Multiple sensitive folders targeted (`finance/`, `pii/`, `sensitive/`).
-
-**Detection Strategy:** Focus on behavioral anomalies (burst patterns, multi-folder access) rather than only IP reputation or access time.
-
-**Exchange Background Relevance:** During my 6+ years at a Yemeni exchange company, I observed similar patterns where employees with legitimate access performed bulk downloads before leaving the organization. This lab translates those real-world observations into automated detection logic.
+**Exchange Background Relevance:** In financial operations, insider data exfiltration is a top risk vector. Employees with legitimate read access to customer or financial records can exfiltrate data without triggering traditional access controls. The behavioral detection approach modeled here — anomaly velocity + cross-folder pattern + IP analysis — directly maps to detection strategies I would apply in a real exchange environment to protect customer and transaction data.
 
 ---
 
